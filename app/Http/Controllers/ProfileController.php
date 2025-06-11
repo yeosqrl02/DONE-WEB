@@ -13,14 +13,17 @@ use App\Models\Task;
 class ProfileController extends Controller
 {
     /**
-     * Menampilkan halaman profil dan daftar tugas.
+     * Menampilkan halaman profil dan daftar tugas milik user yang sedang login.
      */
     public function show(Request $request): View
     {
         $user = $request->user();
 
-        // Ambil semua tugas yang belum selesai
-        $tasks = Task::where('completed', false)->get();
+        // Ambil tugas milik user ini yang belum selesai, urutkan berdasarkan tanggal
+        $tasks = Task::where('user_id', $user->id)
+            ->where('completed', false)
+            ->orderBy('tanggal', 'asc')
+            ->get();
 
         return view('profile.index', [
             'user' => $user,

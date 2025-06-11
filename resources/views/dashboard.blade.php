@@ -15,7 +15,7 @@
 
     <!-- Area Dashboard -->
     <div class="col-lg-9 col-md-8">
-        <h3 class="mb-3">Beranda, <strong>{{ Auth::user()->name }}</strong></h3>
+        <h3 class="mb-3">Halo!, <strong>{{ Auth::user()->name }}</strong></h3>
 
         <!-- Statistik -->
         <div class="row text-center g-3 mb-5">

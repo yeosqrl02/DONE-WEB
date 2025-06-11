@@ -54,10 +54,14 @@ Route::middleware(['auth'])->group(function () {
 
     // Partial untuk reload tbody tabel tugas AJAX
     Route::get('/tasks/partial/tbody', function () {
-        $tasks = \App\Models\Task::with('course')->orderBy('tanggal', 'asc')->get();
+        $userId = Auth::id();
+        $tasks = \App\Models\Task::with('course')
+            ->where('user_id', $userId)
+            ->orderBy('tanggal', 'asc')
+            ->get();
         $courses = \App\Models\Course::all();
         return view('tasks.partials.task_tbody', compact('tasks', 'courses'));
-    })->name('tasks.partial.tbody');
+    })->middleware('auth')->name('tasks.partial.tbody');
 
     // Course CRUD
     Route::post('/courses', [CourseController::class, 'store'])->name('courses.store');

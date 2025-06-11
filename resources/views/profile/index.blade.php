@@ -1,5 +1,19 @@
 @extends('layouts.app')
 
+@push('styles')
+<style>
+    .avatar-img {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #007bff;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        margin-bottom: 1rem;
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="container">
     <div class="row">
@@ -7,19 +21,24 @@
         <div class="col-md-4">
             <div class="card">
                 <div class="card-body text-center">
-                    <img src="{{ Auth::user()->avatar ? asset('storage/avatars/' . Auth::user()->avatar) : 'https://bootdey.com/img/Content/avatar/avatar7.png' }}" class="rounded-circle mb-3" width="150" id="currentAvatar">
-                    <h4 class="mb-0">{{ Auth::user()->name }}</h4>
+                    <img 
+                      src="{{ $user->avatar ? asset('storage/avatars/' . $user->avatar) : 'https://icons.veryicon.com/png/o/miscellaneous/rookie-official-icon-gallery/225-default-avatar.png' }}" 
+                      alt="Avatar" 
+                      class="avatar-img" 
+                      id="currentAvatar"
+                    >
+                    <h4 class="mb-0">{{ $user->name }}</h4>
                     <p class="text-muted">
-                        {{ Auth::user()->job_title ?? 'Full Stack Developer' }}<br>
-                        {{ Auth::user()->location ?? 'Bay Area, San Francisco, CA' }}
+                        {{ $user->job_title ?? 'Full Stack Developer' }}<br>
+                        {{ $user->location ?? 'Bay Area, San Francisco, CA' }}
                     </p>
                 </div>
                 <ul class="list-group list-group-flush mt-3">
-                    <li class="list-group-item"><strong>Website:</strong> <span class="float-end">{{ Auth::user()->website ?? '-' }}</span></li>
-                    <li class="list-group-item"><strong>Github:</strong> <span class="float-end">{{ Auth::user()->github ?? '-' }}</span></li>
-                    <li class="list-group-item"><strong>Twitter:</strong> <span class="float-end">{{ Auth::user()->twitter ?? '-' }}</span></li>
-                    <li class="list-group-item"><strong>Instagram:</strong> <span class="float-end">{{ Auth::user()->instagram ?? '-' }}</span></li>
-                    <li class="list-group-item"><strong>Facebook:</strong> <span class="float-end">{{ Auth::user()->facebook ?? '-' }}</span></li>
+                    <li class="list-group-item"><strong>Website:</strong> <span class="float-end">{{ $user->website ?? '-' }}</span></li>
+                    <li class="list-group-item"><strong>Github:</strong> <span class="float-end">{{ $user->github ?? '-' }}</span></li>
+                    <li class="list-group-item"><strong>Twitter:</strong> <span class="float-end">{{ $user->twitter ?? '-' }}</span></li>
+                    <li class="list-group-item"><strong>Instagram:</strong> <span class="float-end">{{ $user->instagram ?? '-' }}</span></li>
+                    <li class="list-group-item"><strong>Facebook:</strong> <span class="float-end">{{ $user->facebook ?? '-' }}</span></li>
                 </ul>
             </div>
         </div>
@@ -37,7 +56,6 @@
 
             <div class="card mb-3">
                 <div class="card-body">
-                    @php $user = Auth::user(); @endphp
 
                     @foreach ([
                         'Full Name' => $user->name,
@@ -104,7 +122,7 @@
           <!-- Upload Avatar dengan Preview -->
           <div class="mb-3 text-center">
             <label class="form-label d-block">Foto Profil</label>
-            <img id="avatarPreview" src="{{ $user->avatar ? asset('storage/avatars/' . $user->avatar) : 'https://bootdey.com/img/Content/avatar/avatar7.png' }}" class="rounded-circle mb-2" width="120">
+            <img id="avatarPreview" src="{{ $user->avatar ? asset('storage/avatars/' . $user->avatar) : 'https://icons.veryicon.com/png/o/miscellaneous/rookie-official-icon-gallery/225-default-avatar.png' }}" class="rounded-circle mb-2" width="120" style="object-fit: cover; border: 3px solid #007bff; box-shadow: 0 2px 8px rgba(0,0,0,0.15);" >
             <input type="file" name="avatar" accept="image/*" class="form-control mt-2 @error('avatar') is-invalid @enderror" onchange="previewAvatar(this)">
             @error('avatar')
               <div class="invalid-feedback">{{ $message }}</div>
@@ -159,7 +177,7 @@
 
           <div class="row mb-3">
             <div class="col-md-6">
-              <label class="form-label">Pekerjaan / Jabatan</label>
+              <label class="form-label">Jabatan</label>
               <input type="text" name="job_title" class="form-control @error('job_title') is-invalid @enderror" value="{{ old('job_title', $user->job_title) }}">
               @error('job_title')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>

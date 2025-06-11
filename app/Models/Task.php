@@ -15,7 +15,7 @@ class Task extends Model
         'tanggal',
         'course_id',
         'completed',
-        // 'user_id',  // hapus jika kolom ini tidak ada
+        'user_id',   // Pastikan kolom ini ada di tabel dan diisi massal
     ];
 
     protected $casts = [
@@ -28,9 +28,8 @@ class Task extends Model
         return $this->belongsTo(Course::class);
     }
 
-    // Hapus method user() jika tidak ada relasi user_id
-    // public function user()
-    // {
-    //     return $this->belongsTo(User::class);
-    // }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

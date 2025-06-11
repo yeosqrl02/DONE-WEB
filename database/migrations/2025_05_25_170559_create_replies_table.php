@@ -7,25 +7,24 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * Jalankan migrasi.
      */
     public function up(): void
     {
         Schema::create('replies', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('discussion_id')->constrained()->onDelete('cascade');
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->text('isi');
-            $table->timestamps();
+            $table->id(); // Kolom ID balasan (auto increment)
+            $table->foreignId('discussion_id')->constrained()->onDelete('cascade'); // Relasi dengan tabel discussions
+            $table->foreignId('user_id')->constrained()->onDelete('cascade'); // Relasi dengan tabel users (yang memberikan balasan)
+            $table->text('isi'); // Kolom untuk menyimpan isi balasan
+            $table->timestamps(); // Kolom created_at dan updated_at
         });
-
     }
 
     /**
-     * Reverse the migrations.
+     * Membalikkan migrasi.
      */
     public function down(): void
     {
-        Schema::dropIfExists('replies');
+        Schema::dropIfExists('replies'); // Menghapus tabel replies
     }
 };

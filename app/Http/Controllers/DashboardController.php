@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Task;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
@@ -12,19 +13,26 @@ class DashboardController extends Controller
     {
         $today = Carbon::now();
 
-        // Hitung total tugas
-        $totalTasks = Task::count();
+        // Ambil user yang sedang login
+        $userId = Auth::id();
 
-        // Hitung tugas yang sudah selesai
-        $completedTasks = Task::where('completed', true)->count();
+        // Hitung total tugas milik user
+        $totalTasks = Task::where('user_id', $userId)->count();
 
-        // Hitung tugas terlambat (belum selesai & deadline sudah lewat)
-        $lateTasks = Task::where('completed', false)
+        // Hitung tugas yang sudah selesai milik user
+        $completedTasks = Task::where('user_id', $userId)
+                              ->where('completed', true)
+                              ->count();
+
+        // Hitung tugas terlambat (belum selesai & deadline sudah lewat) milik user
+        $lateTasks = Task::where('user_id', $userId)
+                         ->where('completed', false)
                          ->where('tanggal', '<', $today)
                          ->count();
 
-        // Hitung tugas yang upcoming (belum selesai & deadline di masa depan)
-        $upcomingTasks = Task::where('completed', false)
+        // Hitung tugas yang upcoming (belum selesai & deadline di masa depan) milik user
+        $upcomingTasks = Task::where('user_id', $userId)
+                             ->where('completed', false)
                              ->where('tanggal', '>=', $today)
                              ->count();
 

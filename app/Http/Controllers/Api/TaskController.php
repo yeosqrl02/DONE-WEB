@@ -1,35 +1,94 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Task;
 use App\Models\Course;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 
 class TaskController extends Controller
 {
-    // Halaman daftar tugas dan mata kuliah
-    public function index(Request $request)
+    // Mendapatkan daftar semua tugas untuk API
+    public function getAllTasks()
     {
-        $user = Auth::user();
         $tasks = Task::with('course')
-            ->where('user_id', $user->id)
+            ->where('user_id', Auth::id())
             ->orderBy('tanggal', 'asc')
-            ->get();
-        $courses = Course::all();
+            ->get()
+            ->map(function ($task) {
+                return [
+                    'id' => $task->id,
+                    'nama' => $task->nama,
+                    'deskripsi' => $task->deskripsi,
+                    'tanggal' => $task->tanggal,
+                    'course_name' => $task->course->name ?? '-',
+                    'completed' => $task->completed,
+                ];
+            });
 
-        // Jika request AJAX, kembalikan partial tbody untuk reload tabel saja
-        if ($request->ajax()) {
-            return view('tasks.partials.task_tbody', compact('tasks', 'courses'));
-        }
-
-        return view('tasks.index', compact('tasks', 'courses'));
+        return response()->json($tasks);
     }
 
-    // Simpan tugas baru
+    // Mendapatkan tugas terbaru untuk API
+    public function getRecentTasks()
+    {
+        $tasks = Task::where('user_id', Auth::id())
+            ->orderBy('tanggal', 'asc')
+            ->get(['id', 'nama', 'tanggal', 'completed']);
+
+        return response()->json($tasks);
+    }
+
+    // Mendapatkan sejarah tugas yang sudah selesai untuk API
+    public function getTaskHistory()
+    {
+        $tasks = Task::with('course')
+            ->where('user_id', Auth::id())
+            ->where('completed', true)
+            ->orderBy('updated_at', 'desc')
+            ->get()
+            ->map(function ($task) {
+                return [
+                    'id' => $task->id,
+                    'nama' => $task->nama,
+                    'deskripsi' => $task->deskripsi,
+                    'tanggal' => $task->tanggal,
+                    'course_name' => $task->course->name ?? '-',
+                    'completed_at' => $task->updated_at->format('d F Y H:i'),
+                ];
+            });
+
+        return response()->json($tasks);
+    }
+
+    // Mendapatkan statistik tugas untuk API
+    public function getTaskStatistics()
+    {
+        $now = now();
+
+        $totalTasks = Task::where('user_id', Auth::id())->count();
+        $completedTasks = Task::where('user_id', Auth::id())->where('completed', true)->count();
+        $lateTasks = Task::where('user_id', Auth::id())
+            ->where('completed', false)
+            ->where('tanggal', '<', $now)
+            ->count();
+        $upcomingTasks = Task::where('user_id', Auth::id())
+            ->where('completed', false)
+            ->where('tanggal', '>=', $now)
+            ->count();
+
+        return response()->json([
+            'tasks' => $totalTasks,
+            'completed' => $completedTasks,
+            'late' => $lateTasks,
+            'upcoming' => $upcomingTasks,
+        ]);
+    }
+
+    // Menambah tugas melalui API
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -39,7 +98,6 @@ class TaskController extends Controller
             'course_id' => 'required|exists:courses,id',
         ]);
 
-        // Tambahkan user_id ke data validasi
         $validated['user_id'] = Auth::id();
 
         try {
@@ -58,10 +116,9 @@ class TaskController extends Controller
         ]);
     }
 
-    // Update tugas
+    // Memperbarui tugas melalui API
     public function update(Request $request, Task $task)
     {
-        // Pastikan hanya bisa update tugas milik user yang login (opsional tapi disarankan)
         if ($task->user_id !== Auth::id()) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
@@ -89,10 +146,9 @@ class TaskController extends Controller
         ]);
     }
 
-    // Hapus tugas
+    // Menghapus tugas melalui API
     public function destroy(Task $task)
     {
-        // Pastikan hanya bisa hapus tugas milik user yang login (opsional tapi disarankan)
         if ($task->user_id !== Auth::id()) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
@@ -113,7 +169,6 @@ class TaskController extends Controller
     // Toggle status completed tugas
     public function toggleComplete(Request $request, Task $task)
     {
-        // Pastikan hanya bisa update tugas milik user yang login
         if ($task->user_id !== Auth::id()) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
@@ -132,83 +187,6 @@ class TaskController extends Controller
             'success' => true,
             'message' => 'Status tugas berhasil diperbarui.',
             'completed' => $task->completed,
-        ]);
-    }
-
-    // API daftar tugas untuk sidebar (semua tugas, lengkap dengan completed)
-    public function getRecentTasks()
-    {
-        $tasks = Task::where('user_id', Auth::id())
-            ->orderBy('tanggal', 'asc')
-            ->get(['id', 'nama', 'tanggal', 'completed']);
-
-        return response()->json($tasks);
-    }
-
-    // API daftar semua tugas lengkap untuk halaman tasks/index
-    public function getAllTasks()
-    {
-        $tasks = Task::with('course')
-            ->where('user_id', Auth::id())
-            ->orderBy('tanggal', 'asc')
-            ->get()
-            ->map(function ($task) {
-                return [
-                    'id' => $task->id,
-                    'nama' => $task->nama,
-                    'deskripsi' => $task->deskripsi,
-                    'tanggal' => $task->tanggal,
-                    'course_name' => $task->course->name ?? '-',
-                    'completed' => $task->completed,
-                ];
-            });
-
-        return response()->json($tasks);
-    }
-
-    // API: Mendapatkan daftar tugas yang sudah selesai (history) untuk halaman tugas
-    public function getTaskHistory()
-    {
-        $tasks = Task::with('course')
-            ->where('user_id', Auth::id())
-            ->where('completed', true)
-            ->orderBy('updated_at', 'desc')
-            ->get()
-            ->map(function ($task) {
-                return [
-                    'id' => $task->id,
-                    'nama' => $task->nama,
-                    'deskripsi' => $task->deskripsi,
-                    'tanggal' => $task->tanggal,
-                    'course_name' => $task->course->name ?? '-',
-                    'completed_at' => $task->updated_at->format('d F Y H:i'),
-                ];
-            });
-
-        return response()->json($tasks);
-    }
-
-    // API statistik tugas untuk dashboard
-    public function getTaskStatistics()
-    {
-        $now = Carbon::now();
-
-        $totalTasks = Task::where('user_id', Auth::id())->count();
-        $completedTasks = Task::where('user_id', Auth::id())->where('completed', true)->count();
-        $lateTasks = Task::where('user_id', Auth::id())
-            ->where('completed', false)
-            ->where('tanggal', '<', $now)
-            ->count();
-        $upcomingTasks = Task::where('user_id', Auth::id())
-            ->where('completed', false)
-            ->where('tanggal', '>=', $now)
-            ->count();
-
-        return response()->json([
-            'tasks' => $totalTasks,
-            'completed' => $completedTasks,
-            'late' => $lateTasks,
-            'upcoming' => $upcomingTasks,
         ]);
     }
 }
