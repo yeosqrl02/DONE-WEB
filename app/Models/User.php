@@ -28,8 +28,7 @@ class User extends Authenticatable
         'twitter',
         'instagram',
         'facebook',
-        'avatar', // ✅ Tambahkan ini agar avatar bisa disimpan
-        'user_id',
+        'avatar', // ✅ avatar untuk upload foto
     ];
 
     /**

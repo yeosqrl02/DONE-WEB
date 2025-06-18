@@ -7,22 +7,22 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Jalankan migrasi.
+     * Run the migrations.
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('avatar')->nullable()->after('email');
+        Schema::table('tasks', function (Blueprint $table) {
+            $table->timestamp('completed_at')->nullable();
         });
     }
 
     /**
-     * Batalkan migrasi.
+     * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('avatar'); // ✅ Hapus kolom avatar saat rollback
+        Schema::table('tasks', function (Blueprint $table) {
+            $table->dropColumn('completed_at');
         });
     }
 };

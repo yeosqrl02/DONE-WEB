@@ -7,6 +7,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\File;
 use Illuminate\View\View;
 use App\Models\Task;
 
@@ -19,7 +20,6 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
-        // Ambil tugas milik user ini yang belum selesai, urutkan berdasarkan tanggal
         $tasks = Task::where('user_id', $user->id)
             ->where('completed', false)
             ->orderBy('tanggal', 'asc')
@@ -32,35 +32,42 @@ class ProfileController extends Controller
     }
 
     /**
-     * Memperbarui data profil pengguna, termasuk avatar.
+     * Memperbarui data profil pengguna, termasuk avatar dan info sosial.
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
         $user = $request->user();
 
-        // Ambil data validasi dari FormRequest (kecuali avatar)
+        // Ambil data yang tervalidasi, kecuali avatar
         $validated = $request->safe()->except('avatar');
 
         // Tangani upload avatar jika ada
         if ($request->hasFile('avatar')) {
             // Hapus avatar lama jika ada
-            if ($user->avatar && file_exists(public_path('storage/avatars/' . $user->avatar))) {
-                unlink(public_path('storage/avatars/' . $user->avatar));
+            $oldPath = public_path('storage/avatars/' . $user->avatar);
+            if ($user->avatar && File::exists($oldPath)) {
+                File::delete($oldPath);
             }
 
-            // Simpan avatar baru ke public/storage/avatars
+            // Simpan avatar baru ke direktori public
             $file = $request->file('avatar');
             $filename = time() . '_' . $file->getClientOriginalName();
-            $file->move(public_path('storage/avatars'), $filename);
 
-            // Simpan nama file ke model
+            // Pastikan folder tujuan ada
+            $destinationPath = public_path('storage/avatars');
+            if (!File::exists($destinationPath)) {
+                File::makeDirectory($destinationPath, 0755, true);
+            }
+
+            // Simpan file avatar
+            $file->move($destinationPath, $filename);
             $user->avatar = $filename;
         }
 
-        // Perbarui data lainnya
+        // Perbarui semua data kecuali avatar
         $user->fill($validated);
 
-        // Reset email verifikasi jika email berubah
+        // Jika email berubah, verifikasi ulang
         if ($user->isDirty('email')) {
             $user->email_verified_at = null;
         }
@@ -82,6 +89,7 @@ class ProfileController extends Controller
         $user = $request->user();
 
         Auth::logout();
+
         $user->delete();
 
         $request->session()->invalidate();

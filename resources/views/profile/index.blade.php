@@ -15,6 +15,12 @@
 @endpush
 
 @section('content')
+@php
+    $avatarPath = 'storage/avatars/' . $user->avatar;
+    $avatarExists = $user->avatar && file_exists(public_path($avatarPath));
+    $avatarUrl = $avatarExists ? asset($avatarPath) : asset('images/default-avatar.png');
+@endphp
+
 <div class="container">
     <div class="row">
         <!-- Sidebar Kiri -->
@@ -22,23 +28,32 @@
             <div class="card">
                 <div class="card-body text-center">
                     <img 
-                      src="{{ $user->avatar ? asset('storage/avatars/' . $user->avatar) : 'https://icons.veryicon.com/png/o/miscellaneous/rookie-official-icon-gallery/225-default-avatar.png' }}" 
+                      src="{{ $avatarUrl }}" 
                       alt="Avatar" 
                       class="avatar-img" 
                       id="currentAvatar"
                     >
                     <h4 class="mb-0">{{ $user->name }}</h4>
                     <p class="text-muted">
-                        {{ $user->job_title ?? 'Full Stack Developer' }}<br>
-                        {{ $user->location ?? 'Bay Area, San Francisco, CA' }}
+                        {{ $user->job_title ?? '-' }}<br>
+                        {{ $user->location ?? '-' }}
                     </p>
                 </div>
                 <ul class="list-group list-group-flush mt-3">
-                    <li class="list-group-item"><strong>Website:</strong> <span class="float-end">{{ $user->website ?? '-' }}</span></li>
-                    <li class="list-group-item"><strong>Github:</strong> <span class="float-end">{{ $user->github ?? '-' }}</span></li>
-                    <li class="list-group-item"><strong>Twitter:</strong> <span class="float-end">{{ $user->twitter ?? '-' }}</span></li>
-                    <li class="list-group-item"><strong>Instagram:</strong> <span class="float-end">{{ $user->instagram ?? '-' }}</span></li>
-                    <li class="list-group-item"><strong>Facebook:</strong> <span class="float-end">{{ $user->facebook ?? '-' }}</span></li>
+                    @foreach ([
+                        'Website' => $user->website,
+                        'Github' => $user->github,
+                        'Twitter' => $user->twitter,
+                        'Instagram' => $user->instagram,
+                        'Facebook' => $user->facebook,
+                    ] as $label => $value)
+                        <li class="list-group-item">
+                            <strong>{{ $label }}:</strong> 
+                            <span class="float-end">
+                                {!! $value ? '<a href="'.$value.'" target="_blank">'.e($value).'</a>' : '-' !!}
+                            </span>
+                        </li>
+                    @endforeach
                 </ul>
             </div>
         </div>
@@ -56,7 +71,6 @@
 
             <div class="card mb-3">
                 <div class="card-body">
-
                     @foreach ([
                         'Full Name' => $user->name,
                         'Email' => $user->email,
@@ -66,14 +80,14 @@
                         'Job Title' => $user->job_title ?? '-',
                         'Location' => $user->location ?? '-',
                     ] as $label => $value)
-                        <div class="row">
+                        <div class="row mb-2">
                             <div class="col-sm-3"><h6 class="mb-0">{{ $label }}</h6></div>
                             <div class="col-sm-9 text-secondary">{{ $value }}</div>
                         </div>
-                        <hr>
+                        <hr class="my-1">
                     @endforeach
 
-                    <div class="text-center">
+                    <div class="text-center mt-4">
                         <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#editProfileModal">Edit</button>
                     </div>
                 </div>
@@ -119,11 +133,16 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
         </div>
         <div class="modal-body">
-          <!-- Upload Avatar dengan Preview -->
+          <!-- Upload Avatar -->
           <div class="mb-3 text-center">
             <label class="form-label d-block">Foto Profil</label>
-            <img id="avatarPreview" src="{{ $user->avatar ? asset('storage/avatars/' . $user->avatar) : 'https://icons.veryicon.com/png/o/miscellaneous/rookie-official-icon-gallery/225-default-avatar.png' }}" class="rounded-circle mb-2" width="120" style="object-fit: cover; border: 3px solid #007bff; box-shadow: 0 2px 8px rgba(0,0,0,0.15);" >
-            <input type="file" name="avatar" accept="image/*" class="form-control mt-2 @error('avatar') is-invalid @enderror" onchange="previewAvatar(this)">
+            <img id="avatarPreview" 
+                 src="{{ $avatarUrl }}" 
+                 class="rounded-circle mb-2" width="120" 
+                 style="object-fit: cover; border: 3px solid #007bff; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+            <input type="file" name="avatar" accept="image/*" 
+                   class="form-control mt-2 @error('avatar') is-invalid @enderror" 
+                   onchange="previewAvatar(this)">
             @error('avatar')
               <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -143,81 +162,40 @@
           </script>
 
           <!-- Data Diri -->
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <label class="form-label">Nama Lengkap</label>
-              <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name', $user->name) }}" required>
-              @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Email</label>
-              <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email', $user->email) }}" required>
-              @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
-            </div>
-          </div>
+          <div class="row">
+            @foreach ([
+              'name' => 'Nama Lengkap',
+              'email' => 'Email',
+              'phone' => 'Telepon',
+              'mobile' => 'HP',
+              'job_title' => 'Jabatan',
+              'location' => 'Lokasi',
+              'website' => 'Website',
+              'github' => 'Github',
+              'twitter' => 'Twitter',
+              'instagram' => 'Instagram',
+              'facebook' => 'Facebook',
+            ] as $field => $label)
+              <div class="col-md-6 mb-3">
+                <label class="form-label">{{ $label }}</label>
+                <input type="text" name="{{ $field }}" 
+                       class="form-control @error($field) is-invalid @enderror" 
+                       value="{{ old($field, $user->$field) }}">
+                @error($field)
+                  <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+              </div>
+            @endforeach
 
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <label class="form-label">Telepon</label>
-              <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror" value="{{ old('phone', $user->phone) }}">
-              @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            <!-- Textarea untuk Alamat -->
+            <div class="col-12 mb-3">
+              <label class="form-label">Alamat</label>
+              <textarea name="address" rows="3"
+                        class="form-control @error('address') is-invalid @enderror">{{ old('address', $user->address) }}</textarea>
+              @error('address')
+                <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
             </div>
-            <div class="col-md-6">
-              <label class="form-label">HP</label>
-              <input type="text" name="mobile" class="form-control @error('mobile') is-invalid @enderror" value="{{ old('mobile', $user->mobile) }}">
-              @error('mobile')<div class="invalid-feedback">{{ $message }}</div>@enderror
-            </div>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Alamat</label>
-            <textarea name="address" class="form-control @error('address') is-invalid @enderror">{{ old('address', $user->address) }}</textarea>
-            @error('address')<div class="invalid-feedback">{{ $message }}</div>@enderror
-          </div>
-
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <label class="form-label">Jabatan</label>
-              <input type="text" name="job_title" class="form-control @error('job_title') is-invalid @enderror" value="{{ old('job_title', $user->job_title) }}">
-              @error('job_title')<div class="invalid-feedback">{{ $message }}</div>@enderror
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Lokasi</label>
-              <input type="text" name="location" class="form-control @error('location') is-invalid @enderror" value="{{ old('location', $user->location) }}">
-              @error('location')<div class="invalid-feedback">{{ $message }}</div>@enderror
-            </div>
-          </div>
-
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <label class="form-label">Website</label>
-              <input type="url" name="website" class="form-control @error('website') is-invalid @enderror" value="{{ old('website', $user->website) }}">
-              @error('website')<div class="invalid-feedback">{{ $message }}</div>@enderror
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Github</label>
-              <input type="text" name="github" class="form-control @error('github') is-invalid @enderror" value="{{ old('github', $user->github) }}">
-              @error('github')<div class="invalid-feedback">{{ $message }}</div>@enderror
-            </div>
-          </div>
-
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <label class="form-label">Twitter</label>
-              <input type="text" name="twitter" class="form-control @error('twitter') is-invalid @enderror" value="{{ old('twitter', $user->twitter) }}">
-              @error('twitter')<div class="invalid-feedback">{{ $message }}</div>@enderror
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Instagram</label>
-              <input type="text" name="instagram" class="form-control @error('instagram') is-invalid @enderror" value="{{ old('instagram', $user->instagram) }}">
-              @error('instagram')<div class="invalid-feedback">{{ $message }}</div>@enderror
-            </div>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Facebook</label>
-            <input type="text" name="facebook" class="form-control @error('facebook') is-invalid @enderror" value="{{ old('facebook', $user->facebook) }}">
-            @error('facebook')<div class="invalid-feedback">{{ $message }}</div>@enderror
           </div>
         </div>
         <div class="modal-footer">

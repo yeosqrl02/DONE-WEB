@@ -15,12 +15,13 @@ return new class extends Migration
             $table->id();
             $table->string('nama');
             $table->text('deskripsi')->nullable();
-            $table->date('tanggal');
+            $table->dateTime('tanggal'); // jika Anda ingin menyimpan tanggal dan jam
             $table->foreignId('course_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade'); // ← penting untuk user
+            $table->boolean('completed')->default(false); // ← status tugas
             $table->timestamps();
         });
     }
-
 
     /**
      * Reverse the migrations.

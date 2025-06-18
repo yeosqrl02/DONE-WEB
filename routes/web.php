@@ -59,7 +59,7 @@ Route::middleware(['auth'])->group(function () {
             ->where('user_id', $userId)
             ->orderBy('tanggal', 'asc')
             ->get();
-        $courses = \App\Models\Course::all();
+        $courses = \App\Models\Course::where('user_id', $userId)->get(); // Hanya mata kuliah milik user yang login
         return view('tasks.partials.task_tbody', compact('tasks', 'courses'));
     })->middleware('auth')->name('tasks.partial.tbody');
 

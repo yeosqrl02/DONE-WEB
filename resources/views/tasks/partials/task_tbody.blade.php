@@ -1,8 +1,8 @@
-@php
+@php 
     $no = 1;
 @endphp
 
-@foreach ($tasks as $task)
+@forelse ($tasks as $task)
     @if (!$task->completed)
     <tr data-id="{{ $task->id }}">
         <td>{{ $no++ }}</td>
@@ -66,5 +66,10 @@
         </div>
     </div>
     {{-- End Modal Edit --}}
+
     @endif
-@endforeach
+@empty
+    <tr>
+        <td colspan="6" class="text-center text-muted">Tidak ada tugas yang tersedia.</td>
+    </tr>
+@endforelse
